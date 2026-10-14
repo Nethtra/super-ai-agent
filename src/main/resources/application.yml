@@ -1,0 +1,39 @@
+spring:
+  profiles:
+    active: local
+  application:
+   name: super-ai-agent
+  ai:
+    openai:
+      api-key: ${SILICONFLOW_API_KEY}
+      chat:
+        model: deepseek-ai/DeepSeek-V4-Flash
+        base-url: https://api.siliconflow.cn/v1
+
+# 后端配置
+server:
+  # 启动端口
+  port: 8123
+  servlet:
+    # 访问前缀
+    context-path: /api
+
+# knife4j配置 访问localhost:8123/api/doc.html
+# springdoc-openapi项目配置
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+  api-docs:
+    path: /v3/api-docs
+  group-configs:
+    - group: 'default'
+      paths-to-match: '/**'
+      # 接口路径
+      packages-to-scan: com.wty.superaiagent.controller
+# knife4j的增强配置，不需要增强可以不配
+knife4j:
+  enable: true
+  setting:
+    language: zh_cn
