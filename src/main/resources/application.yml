@@ -3,12 +3,23 @@ spring:
     active: local
   application:
    name: super-ai-agent
+  datasource:
+    url: jdbc:mysql://localhost:3306/super_ai_agent?useSSL=false&serverTimezone=Asia/Shanghai&characterEncoding=utf8
+    username: root
+    password: ${MYSQL_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
   ai:
     openai:
       api-key: ${SILICONFLOW_API_KEY}
       chat:
         model: deepseek-ai/DeepSeek-V4-Flash
         base-url: https://api.siliconflow.cn/v1
+    # ChatMemoryRespository对话记忆存储
+    chat:
+      memory:
+        repository:
+          jdbc:
+            initialize-schema: always  # 首次启动自动建表
 
 # 后端配置
 server:

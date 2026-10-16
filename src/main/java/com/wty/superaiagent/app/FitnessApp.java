@@ -6,7 +6,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.memory.ChatMemory;
-import org.springframework.ai.chat.memory.MessageWindowChatMemory;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.stereotype.Component;
@@ -35,9 +34,9 @@ public class FitnessApp {
     private static final String SYSTEM_PROMPT = "你是一个专业的健身教练，擅长回答用户的健身问题";
 
     //构造器：Spring 自动注入配置好的 ChatModel（由 spring-ai-starter-model-openai 根据 application.yml 创建）
-    public FitnessApp(ChatModel chatModel) {
+    public FitnessApp(ChatModel chatModel, ChatMemory chatMemory) {
         //对话记忆：创建基于内存的窗口记忆，默认保留最近 20 条消息，超出后自动淘汰最早的消息
-        ChatMemory chatMemory = MessageWindowChatMemory.builder().build();
+//       设置JdbcChatMemoryRepository之前 ChatMemory chatMemory = MessageWindowChatMemory.builder().build();
 
         this.chatClient = ChatClient
                 .builder(chatModel)
@@ -47,7 +46,7 @@ public class FitnessApp {
                         //加入自定义的日志拦截器
                         new MySimpleLoggerAdvisor()
                         //自定义re2拦截器
-                //        new MyReReadingAdvisor()
+                        //        new MyReReadingAdvisor()
                 )
                 .build();
     }
@@ -79,7 +78,8 @@ public class FitnessApp {
     }
 
 
-    /**5结构化输出
+    /**
+     * 5结构化输出
      * 健身报告类，用于大模型的结构化输出
      * <p>
      * 定义为嵌套 record，字段名和类型就是期望 AI 返回的 JSON 结构：
