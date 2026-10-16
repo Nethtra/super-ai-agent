@@ -10,7 +10,7 @@ import org.springframework.ai.chat.client.advisor.api.StreamAdvisorChain;
 import org.springframework.ai.chat.client.advisor.api.StreamAdvisor;
 import reactor.core.publisher.Flux;
 
-/**
+/**3
  * 自定义日志拦截器（Advisor）
  * <p>
  * 模仿 Spring AI 内置的 SimpleLoggerAdvisor 实现的自定义拦截器，
@@ -99,14 +99,14 @@ public class MySimpleLoggerAdvisor implements CallAdvisor, StreamAdvisor {
      * 打印请求日志
      */
     private void logRequest(ChatClientRequest request) {
-        log.info("request: {}", request);
+        log.info("自定义日志拦截器mark request: {}", request);
     }
 
     /**
      * 打印响应日志
      */
     private void logResponse(ChatClientResponse chatClientResponse) {
-        log.info("response: {}", chatClientResponse);
+        log.info("自定义日志拦截器mark response: {}", chatClientResponse);
     }
 
 }
