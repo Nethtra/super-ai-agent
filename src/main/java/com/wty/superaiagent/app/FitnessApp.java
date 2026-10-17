@@ -8,8 +8,12 @@ import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 /**
@@ -17,6 +21,10 @@ import java.util.List;
  * <p>
  * 基于 Spring AI 的 ChatClient 封装，多轮对话ai应用
  * 通过 conversationId 支持多用户/多会话的记忆隔离。
+ * <p>
+ * 系统提示词不再硬编码在 Java 代码里，而是从
+ * resources/templates/fitnessapp-system-prompt.st 模板文件加载，
+ * 便于修改提示词时无需重新编译代码。
  *
  * @author 王天一
  * @version 1.0
@@ -31,21 +39,38 @@ public class FitnessApp {
      * 封装了 prompt 构建、advisor 拦截链、模型调用等能力
      */
     private final ChatClient chatClient;
-    private static final String SYSTEM_PROMPT = "你是一个专业的健身教练，擅长回答用户的健身问题";
+    /**
+     * 基础系统提示词：从 .st 模板文件读出的字符串
+     * 供 doAskWithReport 在运行时覆盖 system 时手动拼接复用，
+     * 避免提示词内容在代码里出现两份
+     */
+    private final String baseSystemPrompt;
+    //原硬编码的系统提示词，已迁移到 resources/templates/fitnessapp-system-prompt.st
+    //private static final String SYSTEM_PROMPT = "你是一个专业的健身教练，擅长回答用户的健身问题。";
 
-    //构造器：Spring 自动注入配置好的 ChatModel（由 spring-ai-starter-model-openai 根据 application.yml 创建）
-    public FitnessApp(ChatModel chatModel, ChatMemory chatMemory) {
-        //对话记忆：创建基于内存的窗口记忆，默认保留最近 20 条消息，超出后自动淘汰最早的消息
-//       设置JdbcChatMemoryRepository之前 ChatMemory chatMemory = MessageWindowChatMemory.builder().build();
+    //构造器：Spring 自动注入三个依赖——
+    //1. ChatModel：由 spring-ai-starter-model-openai 根据 application.yml 创建
+    //2. ChatMemory：来自 ChatMemoryConfig 定义的 Bean（JDBC 持久化，重启不丢记忆）
+    //3. templateResource：@Value 把 classpath 下的 .st 模板文件包装成 Resource 注入
+    public FitnessApp(ChatModel chatModel,
+                      ChatMemory chatMemory,
+                      //注入PromptTemplate  从文件加载模板
+                      @Value("templates/fitnessapp-system-prompt.st") Resource templateResource) throws IOException {
+        //之前内存版写法：ChatMemory chatMemory = MessageWindowChatMemory.builder().build();
+        //改为注入 ChatMemoryConfig 配置的 JDBC 持久化 Bean
+
+        //在这里把文件内容读成字符串然后赋值（按 UTF-8 解码）
+        this.baseSystemPrompt = templateResource.getContentAsString(StandardCharsets.UTF_8);
 
         this.chatClient = ChatClient
                 .builder(chatModel)
-                .defaultSystem(SYSTEM_PROMPT)//系统 prompt：设定 AI 的角色，每次请求都会带上
+                //系统 prompt：支持直接传 Resource，框架会自动读取模板文件内容作为系统提示词，每次请求都会带上
+                .defaultSystem(templateResource)
                 //对话记忆拦截器：请求前从 ChatMemory 加载历史消息拼入 prompt，响应后再把新消息存回 ChatMemory
                 .defaultAdvisors(MessageChatMemoryAdvisor.builder(chatMemory).build(),
                         //加入自定义的日志拦截器
                         new MySimpleLoggerAdvisor()
-                        //自定义re2拦截器
+                        //自定义re2拦截器：暂时关闭（Re2 会把问题重复两遍，和长系统提示词叠加时 token 消耗较大）
                         //        new MyReReadingAdvisor()
                 )
                 .build();
@@ -105,8 +130,8 @@ public class FitnessApp {
         FitnessReport fitnessReport = chatClient
                 .prompt()
                 //运行时 .system() 会整体覆盖 defaultSystem（不是追加），
-                //所以这里必须手动拼上 SYSTEM_PROMPT，否则基础角色设定会丢失
-                .system(SYSTEM_PROMPT + "你需要提供一个结构化的健身报告，包含报告标题和建议列表")
+                //所以这里必须手动拼上模板里的基础提示词 baseSystemPrompt，否则角色设定会丢失
+                .system(baseSystemPrompt + "你需要提供一个结构化的健身报告，包含报告标题和建议列表")
                 .user(message)
                 .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, conversationId))
                 .call()                                     //同步调用大模型
