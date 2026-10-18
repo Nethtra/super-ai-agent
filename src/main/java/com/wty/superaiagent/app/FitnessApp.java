@@ -5,9 +5,11 @@ import com.wty.superaiagent.advisor.MySimpleLoggerAdvisor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
+import org.springframework.ai.chat.client.advisor.vectorstore.QuestionAnswerAdvisor;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
+import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
@@ -142,5 +144,51 @@ public class FitnessApp {
         String result = fitnessReport.toString();
         log.info("回复内容：：：{}", result);
         return fitnessReport;
+    }
+
+
+    /**9
+     * 注入方式说明：这里用的是 @Resource 字段注入（全限定名是因为文件里
+     * 已 import 了 Spring 的 org.springframework.core.io.Resource，同名冲突）。
+     * 也可以放进构造器参数注入（private final 字段），与本类其他依赖风格更统一：
+     * <pre>
+     * //构造器加参数：public FitnessApp(..., VectorStore fitnessAppVectorStore)
+     * //方法体里赋值：this.fitnessAppVectorStore = fitnessAppVectorStore;
+     * </pre>
+     * 注意：@Resource 先按字段名匹配 Bean，名字对不上时退回按类型注入；
+     * 容器中出现多个 VectorStore Bean 时会有歧义，届时建议改用构造器注入并配合 @Qualifier
+     */
+    @jakarta.annotation.Resource
+    private VectorStore fitnessAppVectorStore;
+
+    /**
+     * 对话方法（RAG 版）：检索增强生成，让 AI 的回答基于本地知识库
+     * <p>
+     * RAG（Retrieval-Augmented Generation）工作流程：
+     * 1. 检索：{@link QuestionAnswerAdvisor} 把用户问题向量化，到
+     *    fitnessAppVectorStore 中找出语义最相近的知识片段
+     * 2. 增强：把检索到的片段作为上下文拼入 prompt（类似"参考资料"），
+     *    并附带指示要求 AI 依据上下文回答
+     * 3. 生成：大模型基于"问题 + 参考资料"生成更准确、有依据的回答
+     * <p>
+     * 与 {@link #doAsk} 的区别：多注册了一个 QuestionAnswerAdvisor，
+     * 其余（记忆、会话 ID）机制完全相同
+     *
+     * @param message        用户输入的问题
+     * @param conversationId 会话 ID，用于隔离不同会话的对话记忆
+     * @return 基于知识库增强后的 AI 回复文本
+     */
+    public String doAskWithRAG(String message, String conversationId) {
+        ChatResponse chatResponse = chatClient.prompt()
+                .user(message)
+                //RAG 检索增强拦截器：请求前自动执行"检索知识库 → 拼接上下文"，默认取相似度最高的 4 个片段
+                .advisors(QuestionAnswerAdvisor.builder(fitnessAppVectorStore).build())
+                //指定本次请求的会话 ID，与 doAsk 相同的记忆机制，可多轮追问
+                .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, conversationId))
+                .call()                                     //同步调用大模型
+                .chatResponse();                            //获取完整的响应对象
+        String result = chatResponse.getResult().getOutput().getText();
+        log.info("回复内容：：：{}", result);//日志记录方便调试
+        return result;
     }
 }

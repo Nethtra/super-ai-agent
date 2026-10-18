@@ -10,10 +10,14 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
   ai:
     openai:
+      base-url: https://api.siliconflow.cn/v1
       api-key: ${SILICONFLOW_API_KEY}
+      # chat模型
       chat:
         model: deepseek-ai/DeepSeek-V4-Flash
-        base-url: https://api.siliconflow.cn/v1
+      # 向量化模型
+      embedding:
+        model: BAAI/bge-m3
     # ChatMemoryRespository对话记忆存储
     chat:
       memory:

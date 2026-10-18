@@ -40,4 +40,12 @@ class FitnessAppTest {
         FitnessApp.FitnessReport fitnessReport = fitnessApp.doAskWithReport("你好，我正在练腰部肌肉，但是我遇到了瓶颈", conversationId);
         Assertions.assertNotNull(fitnessReport);
     }
+
+    @Test
+    void testDoAskWithRAG() {
+        String conversationId = UUID.randomUUID().toString();
+        //提问文档内的问题
+        String answer = fitnessApp.doAskWithRAG("你好，我正在减脂，我做了不少有氧运动了", conversationId);
+        Assertions.assertNotNull(answer);
+    }
 }
