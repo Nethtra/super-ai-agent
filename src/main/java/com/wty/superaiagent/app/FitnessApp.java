@@ -54,9 +54,9 @@ public class FitnessApp {
     //3. templateResource：@Value 把 classpath 下的 .st 模板文件包装成 Resource 注入
     public FitnessApp(ChatModel chatModel,
                       ChatMemory chatMemory,
-                      //注入PromptTemplate  从文件加载模板
-                      @Value("templates/fitnessapp-system-prompt.st") Resource templateResource) throws IOException {
-        //之前内存版写法：ChatMemory chatMemory = MessageWindowChatMemory.builder().build();
+                      //7注入PromptTemplate  从文件加载模板
+                      @Value("classpath:templates/fitnessapp-system-prompt.st") Resource templateResource) throws IOException {
+        //6之前内存版写法：ChatMemory chatMemory = MessageWindowChatMemory.builder().build();
         //改为注入 ChatMemoryConfig 配置的 JDBC 持久化 Bean
 
         //在这里把文件内容读成字符串然后赋值（按 UTF-8 解码）

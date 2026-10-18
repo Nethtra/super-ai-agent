@@ -6,7 +6,7 @@ import org.springframework.ai.chat.memory.repository.jdbc.JdbcChatMemoryReposito
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-/**
+/**6
  * ChatMemory 配置类：把对话记忆的存储方式从内存切换为 JDBC（数据库持久化）
  * <p>
  * 对比两种方式：
