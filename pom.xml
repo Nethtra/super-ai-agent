@@ -99,6 +99,19 @@
             <groupId>org.springframework.ai</groupId>
             <artifactId>spring-ai-vector-store-advisor</artifactId>
         </dependency>
+        <!-- DashScope 核心库：只提供 DashScopeApi/DashScopeDocumentRetriever 等类，不带自动装配 -->
+        <!-- starter 的自动配置是给 Spring Boot 3.x 编译的，与本项目 Boot 4.1.1 不兼容，不能用 -->
+<!--        <dependency>-->
+<!--            <groupId>com.alibaba.cloud.ai</groupId>-->
+<!--            <artifactId>spring-ai-alibaba-core</artifactId>-->
+<!--            <version>1.0.0.4</version>-->
+<!--        </dependency>-->
+
+        <!--        要使用 RetrievalAugmentationAdvisor ，你需要在项目中添加 spring-ai-rag 依赖-->
+        <dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-rag</artifactId>
+        </dependency>
     </dependencies>
 
     <build>

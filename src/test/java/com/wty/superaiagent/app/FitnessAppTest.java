@@ -48,4 +48,13 @@ class FitnessAppTest {
         String answer = fitnessApp.doAskWithRAG("你好，我正在减脂，我做了不少有氧运动了", conversationId);
         Assertions.assertNotNull(answer);
     }
+
+
+//    @Test
+//    void testDoAskWithCloudRAG() {
+//        String conversationId = UUID.randomUUID().toString();
+//        //提问文档内的问题
+//        String answer = fitnessApp.doAskWithRAG("你好，我正在减脂，我做了不少有氧运动了", conversationId);
+//        Assertions.assertNotNull(answer);
+//    }
 }

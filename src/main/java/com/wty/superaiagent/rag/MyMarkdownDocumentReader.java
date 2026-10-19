@@ -14,7 +14,7 @@ import java.util.List;
 
 /**
  * 8
- * 自定义DocumentReader Markdown 文档读取器（RAG 流程的第一步：DocumentLoader）
+ * 自定义DocumentReader MarkdownDocumentReader文档读取器（RAG 流程的第一步：DocumentLoader 将文档抽取到内存中）
  * <p>
  * 负责把 classpath:documents/ 目录下的所有 Markdown 文件读入内存，
  * 并切割成一个个 {@link Document}（RAG 中后续向量化/入库的基本单位）。。

@@ -5,10 +5,12 @@ import com.wty.superaiagent.advisor.MySimpleLoggerAdvisor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
+import org.springframework.ai.chat.client.advisor.api.Advisor;
 import org.springframework.ai.chat.client.advisor.vectorstore.QuestionAnswerAdvisor;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
+import org.springframework.ai.rag.advisor.RetrievalAugmentationAdvisor;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
@@ -27,6 +29,14 @@ import java.util.List;
  * 系统提示词不再硬编码在 Java 代码里，而是从
  * resources/templates/fitnessapp-system-prompt.st 模板文件加载，
  * 便于修改提示词时无需重新编译代码。
+ * <p>
+ * 提供四种对话能力，层层递进：
+ * <ol>
+ *     <li>{@link #doAsk}：基础多轮对话</li>
+ *     <li>{@link #doAskWithReport}：结构化输出</li>
+ *     <li>{@link #doAskWithRAG}：本地向量知识库 RAG</li>
+ *     <li>{@link #doAskWithCloudRAG}：阿里云百炼云端知识库 RAG</li>
+ * </ol>
  *
  * @author 王天一
  * @version 1.0
@@ -147,7 +157,8 @@ public class FitnessApp {
     }
 
 
-    /**9
+    /**
+     * 9
      * 注入方式说明：这里用的是 @Resource 字段注入（全限定名是因为文件里
      * 已 import 了 Spring 的 org.springframework.core.io.Resource，同名冲突）。
      * 也可以放进构造器参数注入（private final 字段），与本类其他依赖风格更统一：
@@ -166,9 +177,9 @@ public class FitnessApp {
      * <p>
      * RAG（Retrieval-Augmented Generation）工作流程：
      * 1. 检索：{@link QuestionAnswerAdvisor} 把用户问题向量化，到
-     *    fitnessAppVectorStore 中找出语义最相近的知识片段
+     * fitnessAppVectorStore 中找出语义最相近的知识片段
      * 2. 增强：把检索到的片段作为上下文拼入 prompt（类似"参考资料"），
-     *    并附带指示要求 AI 依据上下文回答
+     * 并附带指示要求 AI 依据上下文回答
      * 3. 生成：大模型基于"问题 + 参考资料"生成更准确、有依据的回答
      * <p>
      * 与 {@link #doAsk} 的区别：多注册了一个 QuestionAnswerAdvisor，
@@ -191,4 +202,45 @@ public class FitnessApp {
         log.info("回复内容：：：{}", result);//日志记录方便调试
         return result;
     }
+
+//
+//    /**
+//     * 云端 RAG 检索增强拦截器（来自 FitnessAppDashScopeRetrievalAugmentationAdvisorConfig 的 Bean）
+//     * <p>
+//     * 与上面本地 RAG 的区别：检索由阿里云百炼平台托管完成（去云端"健身教练"知识库查），
+//     * 不依赖本地的 fitnessAppVectorStore 和 embedding 配置
+//     * <p>
+//     * 注入方式说明：用的是 @Resource 字段注入（全限定名是因为文件里
+//     * 已 import 了 Spring 的 org.springframework.core.io.Resource，同名冲突）。
+//     * 也可以放进构造器参数注入（private final 字段），与本类其他依赖风格更统一
+//     */
+//    @jakarta.annotation.Resource
+//    private Advisor fitnessAppDashScopeRetrieverAugmentationAdvisor;
+//
+//    /**10
+//     * 对话方法（云端 RAG 版）：回答基于阿里云百炼上的知识库
+//     * <p>
+//     * 工作流程与 {@link #doAskWithRAG} 一致（检索 → 增强 → 生成），
+//     * 只是检索的执行方从本地向量库换成了 DashScope 云端知识库
+//     * <p>
+//     * 与 {@link #doAsk} 的区别：多注册了一个 RetrievalAugmentationAdvisor，
+//     * 其余（记忆、会话 ID）机制完全相同
+//     *
+//     * @param message        用户输入的问题
+//     * @param conversationId 会话 ID，用于隔离不同会话的对话记忆
+//     * @return 基于云端知识库增强后的 AI 回复文本
+//     */
+//    public String doAskWithCloudRAG(String message, String conversationId) {
+//        ChatResponse chatResponse = chatClient.prompt()
+//                .user(message)
+//                //云端 RAG 拦截器：请求前自动去百炼知识库检索相关文档片段，拼入 prompt 作为参考资料
+//                .advisors(fitnessAppDashScopeRetrieverAugmentationAdvisor)
+//                //指定本次请求的会话 ID，与 doAsk 相同的记忆机制，可多轮追问
+//                .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, conversationId))
+//                .call()                                     //同步调用大模型
+//                .chatResponse();                            //获取完整的响应对象
+//        String result = chatResponse.getResult().getOutput().getText();
+//        log.info("回复内容：：：{}", result);//日志记录方便调试
+//        return result;
+//    }
 }

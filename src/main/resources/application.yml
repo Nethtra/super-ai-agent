@@ -9,6 +9,10 @@ spring:
     password: ${MYSQL_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
   ai:
+    dashscope:
+      base-url: https://ws-zf7fyoe2mdv3llp0.cn-beijing.maas.aliyuncs.com/compatible-mode/v1
+      api-key: ${DASHSCOPE_API_KEY}
+
     openai:
       base-url: https://api.siliconflow.cn/v1
       api-key: ${SILICONFLOW_API_KEY}
