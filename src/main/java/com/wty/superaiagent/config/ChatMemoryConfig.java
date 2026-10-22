@@ -7,7 +7,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**6
- * ChatMemory 配置类：把对话记忆的存储方式从内存切换为 JDBC（数据库持久化）
+ * ChatMemory 配置类：把对话记忆的存储方式从内存切换为 JDBC（数据库持久化） 具体实现看yml配置的是什么数据库
  * <p>
  * 对比两种方式：
  * <ul>
@@ -35,7 +35,7 @@ public class ChatMemoryConfig {
     /**
      * 创建基于 JDBC 持久化的对话记忆 Bean
      *
-     * @param repository JDBC 实现的存储仓库，由 starter 自动装配（根据数据源配置创建）
+     * @param repository JDBC 实现的存储仓库，由 starter 自动装配（根据数据源yml配置创建）
      * @return 窗口大小为 20 条、数据落库的 ChatMemory
      */
     @Bean

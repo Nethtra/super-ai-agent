@@ -2,13 +2,28 @@ spring:
   profiles:
     active: local
   application:
-   name: super-ai-agent
+    name: super-ai-agent
+  #  datasource:
+  #    url: jdbc:mysql://localhost:3306/super_ai_agent?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=Asia/Shanghai&characterEncoding=utf8
+  #    username: root
+  #    password: ${MYSQL_PASSWORD}
+  #    driver-class-name: com.mysql.cj.jdbc.Driver
   datasource:
-    url: jdbc:mysql://localhost:3306/super_ai_agent?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=Asia/Shanghai&characterEncoding=utf8
-    username: root
-    password: ${MYSQL_PASSWORD}
-    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:postgresql://47.238.245.170:5432/super_ai_agent
+    username: user
+    password: ${POSTGRESQL_PASSWORD}
+
   ai:
+    # 11 向量存储配置
+    vectorstore:
+      pgvector:
+        index-type: HNSW # 向量索引类型  注意HNSW最高支持2000维度
+        distance-type: COSINE_DISTANCE # 计算向量相似度的算法 COSINE_DISTANCE代表余弦相似度
+        dimensions: 1536 # Embedding 模型输出向量的维度数 值在建表时会被写死到列定义 根据模型支持填写，不要超过模型支持的上限
+        max-document-batch-size: 10000 # 批量写入时，一次最多处理多少条文档
+        initialize-schema: true # 首次启动自动建表
+        # remove-existing-vector-store-table: true # 每次启动都重新建表 测试时用
+
     dashscope:
       base-url: https://ws-zf7fyoe2mdv3llp0.cn-beijing.maas.aliyuncs.com/compatible-mode/v1
       api-key: ${DASHSCOPE_API_KEY}
@@ -21,7 +36,9 @@ spring:
         model: deepseek-ai/DeepSeek-V4-Flash
       # 向量化模型
       embedding:
-        model: BAAI/bge-m3
+        model: Qwen/Qwen3-Embedding-4B
+        dimensions: 1536 # 11指定向量维度，有固定的几个值，不是随变写
+
     # ChatMemoryRespository对话记忆存储
     chat:
       memory:

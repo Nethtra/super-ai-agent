@@ -169,7 +169,7 @@ public class FitnessApp {
      * 注意：@Resource 先按字段名匹配 Bean，名字对不上时退回按类型注入；
      * 容器中出现多个 VectorStore Bean 时会有歧义，届时建议改用构造器注入并配合 @Qualifier
      */
-    @jakarta.annotation.Resource
+    @jakarta.annotation.Resource//11现在是pgVectorStore
     private VectorStore fitnessAppVectorStore;
 
     /**
@@ -243,4 +243,6 @@ public class FitnessApp {
 //        log.info("回复内容：：：{}", result);//日志记录方便调试
 //        return result;
 //    }
+
+
 }
