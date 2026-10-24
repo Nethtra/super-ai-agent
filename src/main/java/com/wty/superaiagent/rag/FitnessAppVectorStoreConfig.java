@@ -31,7 +31,7 @@ import java.util.List;
  * @author 王天一
  * @version 1.0
  */
-//只有显式在yml配置 simple-vector-store.type=simple 时这个类才生效；不配置就默认关闭
+//11只有显式在yml配置 simple-vector-store.type=simple 时这个类才生效；不配置就默认关闭
 //由于@Bean的优先级高于自动配置，所以关闭后SimpleVectorStore就不会被注册到容器中，让位于pgVectorStore的自动装配
 @ConditionalOnProperty(name = "simple-vector-sotore.type", havingValue = "simple", matchIfMissing = false)
 @Configuration

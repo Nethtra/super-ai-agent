@@ -45,7 +45,16 @@ class FitnessAppTest {
     void testDoAskWithRAG() {
         String conversationId = UUID.randomUUID().toString();
         //提问文档内的问题
-        String answer = fitnessApp.doAskWithRAG("你好，我正在减脂，我做了不少有氧运动了", conversationId);
+        String answer = fitnessApp.doAskWithRAG("你好，我正在减脂，我已经做过不少有氧运动了", conversationId);
+        Assertions.assertNotNull(answer);
+    }
+
+
+    @Test
+    void testDoAskWithRAGAndRetrievalAugmentationAdvisor() {
+        String conversationId = UUID.randomUUID().toString();
+        //提问文档内的问题
+        String answer = fitnessApp.doAskWithRAG("你好，我正在减脂，我已经做过不少有氧运动了", conversationId);
         Assertions.assertNotNull(answer);
     }
 

@@ -1,19 +1,19 @@
 package com.wty.superaiagent.app;
 
-import com.wty.superaiagent.advisor.MyReReadingAdvisor;
 import com.wty.superaiagent.advisor.MySimpleLoggerAdvisor;
+import com.wty.superaiagent.rag.FitnessAppRetrievalAugmentationAdvisorFactory;
+import com.wty.superaiagent.rag.MyRewriteQueryTransformer;
+import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
-import org.springframework.ai.chat.client.advisor.api.Advisor;
 import org.springframework.ai.chat.client.advisor.vectorstore.QuestionAnswerAdvisor;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
-import org.springframework.ai.rag.advisor.RetrievalAugmentationAdvisor;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.Resource;
+
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -67,7 +67,7 @@ public class FitnessApp {
     public FitnessApp(ChatModel chatModel,
                       ChatMemory chatMemory,
                       //7注入PromptTemplate  从文件加载模板
-                      @Value("classpath:templates/fitnessapp-system-prompt.st") Resource templateResource) throws IOException {
+                      @Value("classpath:templates/fitnessapp-system-prompt.st") org.springframework.core.io.Resource templateResource) throws IOException {
         //6之前内存版写法：ChatMemory chatMemory = MessageWindowChatMemory.builder().build();
         //改为注入 ChatMemoryConfig 配置的 JDBC 持久化 Bean
 
@@ -118,11 +118,9 @@ public class FitnessApp {
     /**
      * 5结构化输出
      * 健身报告类，用于大模型的结构化输出
-     * <p>
      * 定义为嵌套 record，字段名和类型就是期望 AI 返回的 JSON 结构：
      * Spring AI 会把它转成 JSON Schema 注入 prompt，要求模型按此格式回答；
      * 拿到响应后再自动反序列化成该对象，无需手动解析 JSON。
-     * <p>
      * 注意：record 的访问器是 title()、suggestions()，不是 getTitle() getSuggestions()
      */
     record FitnessReport(String title, List<String> suggestions) {
@@ -130,7 +128,6 @@ public class FitnessApp {
 
     /**
      * 对话方法（结构化输出版）：让 AI 以固定的结构返回健身报告
-     * <p>
      * 与 {@link #doAsk} 的区别在于最后一环用 .entity(FitnessReport.class)
      * 替代 .chatResponse()，直接拿到反序列化好的 FitnessReport 对象
      *
@@ -159,17 +156,12 @@ public class FitnessApp {
 
     /**
      * 9
-     * 注入方式说明：这里用的是 @Resource 字段注入（全限定名是因为文件里
-     * 已 import 了 Spring 的 org.springframework.core.io.Resource，同名冲突）。
+     * 注入方式说明：这里用的是 @Resource 字段注入
      * 也可以放进构造器参数注入（private final 字段），与本类其他依赖风格更统一：
-     * <pre>
-     * //构造器加参数：public FitnessApp(..., VectorStore fitnessAppVectorStore)
-     * //方法体里赋值：this.fitnessAppVectorStore = fitnessAppVectorStore;
-     * </pre>
-     * 注意：@Resource 先按字段名匹配 Bean，名字对不上时退回按类型注入；
-     * 容器中出现多个 VectorStore Bean 时会有歧义，届时建议改用构造器注入并配合 @Qualifier
+     * 构造器加参数：public FitnessApp(..., VectorStore fitnessAppVectorStore)
+     * 方法体里赋值：this.fitnessAppVectorStore = fitnessAppVectorStore;
      */
-    @jakarta.annotation.Resource//11现在是pgVectorStore
+    @Resource//11现在是pgVectorStore
     private VectorStore fitnessAppVectorStore;
 
     /**
@@ -181,7 +173,6 @@ public class FitnessApp {
      * 2. 增强：把检索到的片段作为上下文拼入 prompt（类似"参考资料"），
      * 并附带指示要求 AI 依据上下文回答
      * 3. 生成：大模型基于"问题 + 参考资料"生成更准确、有依据的回答
-     * <p>
      * 与 {@link #doAsk} 的区别：多注册了一个 QuestionAnswerAdvisor，
      * 其余（记忆、会话 ID）机制完全相同
      *
@@ -189,12 +180,32 @@ public class FitnessApp {
      * @param conversationId 会话 ID，用于隔离不同会话的对话记忆
      * @return 基于知识库增强后的 AI 回复文本
      */
+
+    //15注入查询重写器
+    @Resource
+    MyRewriteQueryTransformer myRewriteQueryTransformer;
+
     public String doAskWithRAG(String message, String conversationId) {
+        String rewrittenMessage = myRewriteQueryTransformer.doQueryRewrite(message);
         ChatResponse chatResponse = chatClient.prompt()
-                .user(message)
-                //RAG 检索增强拦截器：请求前自动执行"检索知识库 → 拼接上下文"，默认取相似度最高的 4 个片段
+                .user(rewrittenMessage)
+                //11 之前注入的是SimpleVectorStore 现在是pgVectorStore
                 .advisors(QuestionAnswerAdvisor.builder(fitnessAppVectorStore).build())
                 //指定本次请求的会话 ID，与 doAsk 相同的记忆机制，可多轮追问
+                .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, conversationId))
+                .call()                                     //同步调用大模型
+                .chatResponse();                            //获取完整的响应对象
+        String result = chatResponse.getResult().getOutput().getText();
+        log.info("回复内容：：：{}", result);//日志记录方便调试
+        return result;
+    }
+
+    //1617使用RetrievalAugmentationAdvisor进行RAG
+    public String doAskWithRAGAndRetrievalAugmentationAdvisor(String message, String conversationId) {
+        String rewrittenMessage = myRewriteQueryTransformer.doQueryRewrite(message);
+        ChatResponse chatResponse = chatClient.prompt()
+                .user(rewrittenMessage)
+                .advisors(FitnessAppRetrievalAugmentationAdvisorFactory.create(fitnessAppVectorStore,"心理"))
                 .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, conversationId))
                 .call()                                     //同步调用大模型
                 .chatResponse();                            //获取完整的响应对象

@@ -22,7 +22,7 @@ spring:
         dimensions: 1536 # Embedding 模型输出向量的维度数 值在建表时会被写死到列定义 根据模型支持填写，不要超过模型支持的上限
         max-document-batch-size: 10000 # 批量写入时，一次最多处理多少条文档
         initialize-schema: true # 首次启动自动建表
-        # remove-existing-vector-store-table: true # 每次启动都重新建表 测试时用
+       #  remove-existing-vector-store-table: true # 每次启动都重新建表 测试时用
 
     dashscope:
       base-url: https://ws-zf7fyoe2mdv3llp0.cn-beijing.maas.aliyuncs.com/compatible-mode/v1

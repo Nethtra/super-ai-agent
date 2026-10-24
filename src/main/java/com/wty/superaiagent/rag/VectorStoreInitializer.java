@@ -1,5 +1,6 @@
 package com.wty.superaiagent.rag;
 
+import jakarta.annotation.Resource;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.boot.ApplicationArguments;
@@ -9,7 +10,8 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 
-/**11
+/**
+ * 11 这个类实际上就是ETL的过程
  * 向量库文档初始化器：应用启动时把 Markdown 文档存入 pgvector
  * <p>
  * 背景：原先 SimpleVectorStore 的灌库逻辑写在 FitnessAppVectorStoreConfig 的 @Bean 里，
@@ -46,6 +48,14 @@ public class VectorStoreInitializer implements ApplicationRunner {
      */
     private final JdbcTemplate jdbcTemplate;
 
+    //12T 文本切割器 但是不建议使用基于Token的 因为切得太暴力了
+    @Resource
+    public MyTokenTextSplitter myTokenTextSplitter;
+
+    //13T 元数据增强器
+    @Resource
+    public MyKeywordMetadataEnricher myKeywordMetadataEnricher;
+
     //构造器注入三个依赖，与 @Resource 字段注入等效，且便于单测时传入 Mock
     public VectorStoreInitializer(VectorStore vectorStore,
                                   MyMarkdownDocumentReader reader,
@@ -55,12 +65,6 @@ public class VectorStoreInitializer implements ApplicationRunner {
         this.jdbcTemplate = jdbcTemplate;
     }
 
-    /**
-     * 启动收尾阶段执行（所有 Bean 就绪之后）：
-     * 空表 → 读取并灌库；非空 → 直接跳过，保证幂等
-     *
-     * @param args 启动参数（--xxx 命令行参数），本类未使用
-     */
     @Override
     public void run(ApplicationArguments args) {
         //查询当前向量库中的文档数，作为"是否已灌过库"的判断依据
@@ -69,8 +73,14 @@ public class VectorStoreInitializer implements ApplicationRunner {
         if (count != null && count > 0) {
             return;   //库里已有文档，跳过（改了 Markdown 想重新灌，手动清空表即可）
         }
-        //库里没有文档，才执行读取和入库——vectorStore.add 内部会自动向量化再存储
+        //库里没有文档，才执行读取和入库
+        //读取文档
         List<Document> documents = myMarkdownDocumentReader.readMarkdownDocuments();
-        vectorStore.add(documents);
+        //12切割文档
+        //List<Document> splitDocuments = myTokenTextSplitter.splitCustomized(documents);
+        //13关键词增强
+        List<Document> enrichedDocuments = myKeywordMetadataEnricher.enrichDocumentsWithKeywords(documents);
+        //vectorStore.add 内部会自动向量化再存储
+        vectorStore.add(enrichedDocuments);
     }
 }

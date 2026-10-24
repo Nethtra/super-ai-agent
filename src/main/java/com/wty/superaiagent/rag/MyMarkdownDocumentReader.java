@@ -47,8 +47,10 @@ public class MyMarkdownDocumentReader {
         try {
             //读取documents目录下的所有markdown
             Resource[] resources = resourcePatternResolver.getResources("classpath:documents/*.md");
+
             for (Resource resource : resources) {//每个文件
                 String filename = resource.getFilename();
+                String purpose = filename.substring(0, 2);//切割前两个字
                 //MarkdownDocumentReaderConfig 决定如何切割文档：
                 MarkdownDocumentReaderConfig markdownDocumentReaderConfig = MarkdownDocumentReaderConfig.builder()
                         //遇到分割线（---）就切出一个新的 Document
@@ -57,9 +59,9 @@ public class MyMarkdownDocumentReader {
                         .withIncludeCodeBlock(false)
                         //引用块（>）不纳入切割结果
                         .withIncludeBlockquote(false)
-                        //每个切出来的 Document 都添加文件名作为元数据标签，
-                        //后续 RAG 检索命中时可通过 metadata 溯源到来源文件
-                        .withAdditionalMetadata("filename", filename)
+                        //每个切出来的 Document 都可以添加元数据标签，后续 RAG 检索命中时可通过 metadata 溯源到来源文件
+                        .withAdditionalMetadata("filename", filename)//文件名
+                        .withAdditionalMetadata("purpose", purpose)//健身的目的
                         .build();
                 MarkdownDocumentReader markdownDocumentReader = new MarkdownDocumentReader(resource, markdownDocumentReaderConfig);
                 //markdownDocumentReader.get()得到按上述规则切割后的List<Document>
