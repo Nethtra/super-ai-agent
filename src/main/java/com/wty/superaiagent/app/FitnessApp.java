@@ -11,6 +11,7 @@ import org.springframework.ai.chat.client.advisor.vectorstore.QuestionAnswerAdvi
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
+import org.springframework.ai.tool.ToolCallback;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.beans.factory.annotation.Value;
 
@@ -205,7 +206,7 @@ public class FitnessApp {
         String rewrittenMessage = myRewriteQueryTransformer.doQueryRewrite(message);
         ChatResponse chatResponse = chatClient.prompt()
                 .user(rewrittenMessage)
-                .advisors(FitnessAppRetrievalAugmentationAdvisorFactory.create(fitnessAppVectorStore,"心理"))
+                .advisors(FitnessAppRetrievalAugmentationAdvisorFactory.create(fitnessAppVectorStore, "心理"))
                 .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, conversationId))
                 .call()                                     //同步调用大模型
                 .chatResponse();                            //获取完整的响应对象
@@ -214,6 +215,23 @@ public class FitnessApp {
         return result;
     }
 
+    @Resource
+    private ToolCallback[] allTools;
+
+    //25使用工具调用
+    public String doAskWithToolCalling(String message, String conversationId) {
+        ChatResponse chatResponse = chatClient
+                .prompt()
+                .user(message)
+                .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, conversationId))
+                .tools(allTools)//调用工具
+                .call()
+                .chatResponse();
+
+        String result = chatResponse.getResult().getOutput().getText();
+        log.info("回复内容：：：{}", result);
+        return result;
+    }
 //
 //    /**
 //     * 云端 RAG 检索增强拦截器（来自 FitnessAppDashScopeRetrievalAugmentationAdvisorConfig 的 Bean）

@@ -8,11 +8,13 @@ import com.itextpdf.io.font.PdfEncodings;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.Paragraph;
 import com.wty.superaiagent.constant.FileConstant;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
@@ -55,6 +57,7 @@ import java.util.Locale;
  * @author 王天一
  * @version 1.0
  */
+@Slf4j
 public class PDFGenerationTool {
 
     /**
@@ -144,26 +147,38 @@ public class PDFGenerationTool {
      * @throws IOException 字体包和系统字体都不可用时抛出，由调用方转成失败提示
      */
     private PdfFont resolveChineseFont() throws IOException {
+        // 记录每个候选的失败原因：字体问题最难查，把原因带出去比只抛一句"失败"有用得多
+        List<String> failures = new ArrayList<>();
+
         // 首选：iText 官方字体包，跨平台，不依赖本机装了什么字体
         try {
-            return PdfFontFactory.createFont(CJK_FONT, CJK_ENCODING);
-        } catch (IOException fontPackMissing) {
-            // 次选：遍历系统字体，找到第一个存在的就用它；IDENTITY_H 表示按 Unicode 编码（中文字体的通用选择）
-            for (String candidate : SYSTEM_FONT_CANDIDATES) {
-                String path = candidate.contains(",") ? candidate.substring(0, candidate.indexOf(',')) : candidate;
-                if (!new File(path).exists()) {
-                    continue;
-                }
-                try {
-                    return PdfFontFactory.createFont(candidate, PdfEncodings.IDENTITY_H);
-                } catch (IOException ignore) {
-                    // 该字体无法解析时继续试下一个
-                }
-            }
-            // 都失败：给出可操作的提示，而不是让用户去猜
-            throw new IOException("无法加载中文字体，请确认已引入 com.itextpdf:font-asian 依赖，"
-                    + "或在本机安装中文字体。原始错误：" + fontPackMissing.getMessage(), fontPackMissing);
+            PdfFont font = PdfFontFactory.createFont(CJK_FONT, CJK_ENCODING);
+            log.debug("PDF 使用字体包字体：{}", CJK_FONT);
+            return font;
+        } catch (Exception e) {
+            failures.add(CJK_FONT + " → " + e.getMessage());
+            log.warn("字体包字体 {} 不可用：{}", CJK_FONT, e.getMessage());
         }
+
+        // 次选：系统字体文件。IDENTITY_H 表示按 Unicode 编码，是中文字体的通用选择
+        for (String candidate : SYSTEM_FONT_CANDIDATES) {
+            String path = candidate.contains(",") ? candidate.substring(0, candidate.indexOf(',')) : candidate;
+            if (!new File(path).exists()) {
+                continue;   // 本机没有这个字体，跳过（不算失败，避免提示信息被噪声淹掉）
+            }
+            try {
+                PdfFont font = PdfFontFactory.createFont(candidate, PdfEncodings.IDENTITY_H);
+                log.debug("PDF 使用系统字体：{}", candidate);
+                return font;
+            } catch (Exception e) {
+                failures.add(candidate + " → " + e.getMessage());
+                log.warn("系统字体 {} 加载失败：{}", candidate, e.getMessage());
+            }
+        }
+
+        // 都失败：把每个候选的失败原因一并返回，方便定位是缺依赖还是字体文件本身有问题
+        throw new IOException("无法加载中文字体。请确认依赖 com.itextpdf:font-asian 已引入（版本需与 kernel 一致），"
+                + "且本机存在中文字体文件。失败详情：" + String.join("；", failures));
     }
 
     /**

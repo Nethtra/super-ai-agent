@@ -6,7 +6,7 @@ import org.springframework.ai.tool.annotation.ToolParam;
 import java.util.Locale;
 
 /**
- * 23 计算工具：把健身领域里"必须算准"的几个指标交给代码计算，而不是让大模型心算。
+ * 23 计算工具
  * <p>
  * 一、为什么要做成工具
  * 大模型算数是"生成"出来的，不是"计算"出来的：同一个 BMI，问两次可能给两个结果；
@@ -47,7 +47,7 @@ import java.util.Locale;
  * @author 王天一
  * @version 1.0
  */
-public class CalculateTool {
+public class CalculationTool {
 
     /** 每克蛋白质提供的热量（千卡） */
     private static final double KCAL_PER_GRAM_PROTEIN = 4.0;

@@ -1,6 +1,7 @@
 package com.wty.superaiagent.app;
 
 import cn.hutool.core.lang.UUID;
+import com.wty.superaiagent.tools.PDFGenerationTool;
 import jakarta.annotation.Resource;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -58,6 +59,21 @@ class FitnessAppTest {
         Assertions.assertNotNull(answer);
     }
 
+    @Test
+    void doAskWithToolCalling() {
+        testToolCalling("我70kg 180cm，帮我计算我的BMI，基础代谢率 BMR 与每日总消耗 TDEE 每日蛋白/脂肪/碳水克数");
+        testToolCalling("读一下hello.txt");
+        testToolCalling("我180cm，120kg，帮我指定一个健身计划200字，写入pdf");
+        testToolCalling("帮我下载一张肌肉的图片");
+        testToolCalling("看一下我电脑上的java的版本");
+        testToolCalling("上网搜索一下主流的健身和健康网站");
+    }
+
+    private void testToolCalling(String message) {
+        String conversationId = UUID.randomUUID().toString();
+        String answer = fitnessApp.doAskWithToolCalling(message, conversationId);
+        Assertions.assertNotNull(answer);
+    }
 
 //    @Test
 //    void testDoAskWithCloudRAG() {
