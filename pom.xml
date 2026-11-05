@@ -114,6 +114,24 @@
             <artifactId>postgresql</artifactId>
             <scope>runtime</scope>
         </dependency>
+        <!-- 22 PDF 生成工具所需：iText 7 的内核与排版模块 -->
+        <dependency>
+            <groupId>com.itextpdf</groupId>
+            <artifactId>kernel</artifactId>
+            <version>7.2.5</version>
+        </dependency>
+        <dependency>
+            <groupId>com.itextpdf</groupId>
+            <artifactId>layout</artifactId>
+            <version>7.2.5</version>
+        </dependency>
+        <!-- iText 7 默认不带中文字体，需要 font-asian 提供 CJK 字体（如 STSong-Light），否则中文会报错或显示空白 -->
+        <!-- 注意：itext-asian:5.2.0 是 iText 5 的字体包，iText 7 必须用 font-asian，版本号与 kernel 保持一致 -->
+        <dependency>
+            <groupId>com.itextpdf</groupId>
+            <artifactId>font-asian</artifactId>
+            <version>7.2.5</version>
+        </dependency>
     </dependencies>
 
     <build>

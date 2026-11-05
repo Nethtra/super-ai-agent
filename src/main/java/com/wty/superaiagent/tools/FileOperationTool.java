@@ -38,7 +38,7 @@ public class FileOperationTool {
         try {
             // Hutool 工具方法：按 UTF-8 读取为字符串；文件不存在会抛 IORuntimeException
             return FileUtil.readUtf8String(fileReadPath);
-        } catch (IORuntimeException e) {
+        } catch (Exception e) {
             // 不向外抛异常，而是把失败信息当作"工具结果"交还给模型，让它有机会自行纠正
             return "error reading file:" + e.getMessage();
         }
@@ -56,7 +56,7 @@ public class FileOperationTool {
             // 覆盖写入（不是追加）；需要追加可改用 FileUtil.appendUtf8String
             FileUtil.writeUtf8String(content, fileWritePath);
             return "file successfully written to:" + fileWritePath;
-        } catch (IORuntimeException e) {
+        } catch (Exception e) {
             return "error writing file:" + e.getMessage();
         }
     }
