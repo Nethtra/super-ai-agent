@@ -20,8 +20,7 @@ class FitnessAppTest {
     private FitnessApp fitnessApp;
 
     @Test
-    void testDoAsk() {
-
+    void doAsk() {
         String conversationId = UUID.randomUUID().toString();
         //第一轮对话
         String answer = fitnessApp.doAsk("你好，我在北京", conversationId);
@@ -36,14 +35,14 @@ class FitnessAppTest {
 
 
     @Test
-    void TestDoAskWithReport() {
+    void doAskWithReport() {
         String conversationId = UUID.randomUUID().toString();
         FitnessApp.FitnessReport fitnessReport = fitnessApp.doAskWithReport("你好，我正在练腰部肌肉，但是我遇到了瓶颈", conversationId);
         Assertions.assertNotNull(fitnessReport);
     }
 
     @Test
-    void testDoAskWithRAG() {
+    void doAskWithRAG() {
         String conversationId = UUID.randomUUID().toString();
         //提问文档内的问题
         String answer = fitnessApp.doAskWithRAG("你好，我正在减脂，我已经做过不少有氧运动了", conversationId);
@@ -52,7 +51,7 @@ class FitnessAppTest {
 
 
     @Test
-    void testDoAskWithRAGAndRetrievalAugmentationAdvisor() {
+    void doAskWithRAGAndRetrievalAugmentationAdvisor() {
         String conversationId = UUID.randomUUID().toString();
         //提问文档内的问题
         String answer = fitnessApp.doAskWithRAG("你好，我正在减脂，我已经做过不少有氧运动了", conversationId);
@@ -75,8 +74,15 @@ class FitnessAppTest {
         Assertions.assertNotNull(answer);
     }
 
+    @Test
+    void doAskWithMCP() {
+        String conversationId = UUID.randomUUID().toString();
+        String answer = fitnessApp.doAskWithMCP("帮我推荐几个广州市天河区的健身房，我想健身", conversationId);
+        Assertions.assertNotNull(answer);
+    }
+
 //    @Test
-//    void testDoAskWithCloudRAG() {
+//    void doAskWithCloudRAG() {
 //        String conversationId = UUID.randomUUID().toString();
 //        //提问文档内的问题
 //        String answer = fitnessApp.doAskWithRAG("你好，我正在减脂，我做了不少有氧运动了", conversationId);

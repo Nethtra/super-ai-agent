@@ -73,11 +73,11 @@
             <artifactId>spring-ai-starter-model-openai</artifactId>
         </dependency>
         <!-- MySQL JDBC 驱动 -->
-<!--        <dependency>-->
-<!--            <groupId>com.mysql</groupId>-->
-<!--            <artifactId>mysql-connector-j</artifactId>-->
-<!--            <scope>runtime</scope>-->
-<!--        </dependency>-->
+        <!--        <dependency>-->
+        <!--            <groupId>com.mysql</groupId>-->
+        <!--            <artifactId>mysql-connector-j</artifactId>-->
+        <!--            <scope>runtime</scope>-->
+        <!--        </dependency>-->
         <!-- Spring AI 的 JDBC 记忆存储模块 -->
         <dependency>
             <groupId>org.springframework.ai</groupId>
@@ -131,6 +131,11 @@
             <groupId>com.itextpdf</groupId>
             <artifactId>font-asian</artifactId>
             <version>7.2.5</version>
+        </dependency>
+        <!-- mcp客户端starter-->
+        <dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-starter-mcp-client</artifactId>
         </dependency>
     </dependencies>
 

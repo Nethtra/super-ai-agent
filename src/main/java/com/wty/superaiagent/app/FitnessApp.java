@@ -11,8 +11,11 @@ import org.springframework.ai.chat.client.advisor.vectorstore.QuestionAnswerAdvi
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
+import org.springframework.ai.mcp.SyncMcpToolCallbackProvider;
 import org.springframework.ai.tool.ToolCallback;
+import org.springframework.ai.tool.ToolCallbackProvider;
 import org.springframework.ai.vectorstore.VectorStore;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 
 import org.springframework.stereotype.Component;
@@ -232,17 +235,36 @@ public class FitnessApp {
         log.info("回复内容：：：{}", result);
         return result;
     }
-//
-//    /**
-//     * 云端 RAG 检索增强拦截器（来自 FitnessAppDashScopeRetrievalAugmentationAdvisorConfig 的 Bean）
-//     * <p>
-//     * 与上面本地 RAG 的区别：检索由阿里云百炼平台托管完成（去云端"健身教练"知识库查），
-//     * 不依赖本地的 fitnessAppVectorStore 和 embedding 配置
-//     * <p>
-//     * 注入方式说明：用的是 @Resource 字段注入（全限定名是因为文件里
-//     * 已 import 了 Spring 的 org.springframework.core.io.Resource，同名冲突）。
-//     * 也可以放进构造器参数注入（private final 字段），与本类其他依赖风格更统一
-//     */
+
+    //26MCP客户端使用
+    @Resource
+    private ToolCallbackProvider toolCallbackProvider;
+
+    public String doAskWithMCP(String message, String conversationId) {
+
+        ChatResponse chatResponse = chatClient
+                .prompt()
+                .user(message)
+                .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, conversationId))
+                .tools(toolCallbackProvider)//调用
+                .call()
+                .chatResponse();
+
+        String result = chatResponse.getResult().getOutput().getText();
+        log.info("回复内容：：：{}", result);
+        return result;
+    }
+
+    /**
+     * 云端 RAG 检索增强拦截器（来自 FitnessAppDashScopeRetrievalAugmentationAdvisorConfig 的 Bean）
+     * <p>
+     * 与上面本地 RAG 的区别：检索由阿里云百炼平台托管完成（去云端"健身教练"知识库查），
+     * 不依赖本地的 fitnessAppVectorStore 和 embedding 配置
+     * <p>
+     * 注入方式说明：用的是 @Resource 字段注入（全限定名是因为文件里
+     * 已 import 了 Spring 的 org.springframework.core.io.Resource，同名冲突）。
+     * 也可以放进构造器参数注入（private final 字段），与本类其他依赖风格更统一
+     */
 //    @jakarta.annotation.Resource
 //    private Advisor fitnessAppDashScopeRetrieverAugmentationAdvisor;
 //

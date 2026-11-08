@@ -1,6 +1,7 @@
 # custom
 application-local.yml
 tmp
+mcp-config.json
 
 HELP.md
 target/
