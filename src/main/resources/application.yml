@@ -54,6 +54,9 @@ spring:
 #          connections:
 #            amap-maps:
 #              url: https://mcp.amap.com/mcp?key=${AMAP_MAPS_API_KEY}
+            #27pexafy streamable
+#            pexafy:
+#              url: http://localhost:8124/mcp
         stdio:
           # stdio需要显示指定配置文件 指向 classpath 下的配置文件；不带 classpath: 前缀会被解析成 ServletContext 相对路径而找不到
           servers-configuration: classpath:mcp-config.json

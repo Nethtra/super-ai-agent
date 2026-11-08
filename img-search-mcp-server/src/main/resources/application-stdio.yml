@@ -1,0 +1,18 @@
+# stdio
+spring:
+  ai:
+    mcp:
+      server:
+        name: stdio-mcp-server
+        version: 1.0.0
+        type: SYNC
+        stdio: true
+
+  main:
+    web-application-type: none # 因为是stdio，所以关闭web服务，保持精简
+    banner-mode: off # 关闭输出banner信息
+
+# 关闭日志输出，防止客户端解析错误
+logging:
+  pattern:
+    console: ""

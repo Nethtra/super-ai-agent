@@ -1,0 +1,14 @@
+# streamable http
+spring:
+  ai:
+    mcp:
+      server:
+        protocol: STREAMABLE
+        name: streamable-mcp-server
+        version: 1.0.0
+        type: SYNC
+        resource-change-notification: true
+        tool-change-notification: true
+        prompt-change-notification: true
+        streamable-http:
+          mcp-endpoint: /mcp

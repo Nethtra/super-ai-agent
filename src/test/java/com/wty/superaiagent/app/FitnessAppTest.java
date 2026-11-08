@@ -76,8 +76,13 @@ class FitnessAppTest {
 
     @Test
     void doAskWithMCP() {
+        //26测试mcp客户端开发
+//        String conversationId = UUID.randomUUID().toString();
+//        String answer = fitnessApp.doAskWithMCP("帮我推荐几个广州市天河区的健身房，我想健身", conversationId);
+//        Assertions.assertNotNull(answer);
+        //27测试mcp服务端和客户端开发
         String conversationId = UUID.randomUUID().toString();
-        String answer = fitnessApp.doAskWithMCP("帮我推荐几个广州市天河区的健身房，我想健身", conversationId);
+        String answer = fitnessApp.doAskWithMCP("搜索健身的图片", conversationId);
         Assertions.assertNotNull(answer);
     }
 
